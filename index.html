@@ -103,6 +103,32 @@
   };
 </script>
 <style>
+  /* ── CUSTOM SCROLLBAR ── */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0d1020;
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #2f80ff 0%, #1a5cd6 100%);
+    border-radius: 99px;
+    box-shadow: 0 0 8px rgba(47,128,255,0.5);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #5da0ff 0%, #2f80ff 100%);
+    box-shadow: 0 0 12px rgba(47,128,255,0.8);
+  }
+  ::-webkit-scrollbar-corner {
+    background: #0a0d14;
+  }
+  html, body {
+    scrollbar-width: thin;
+    scrollbar-color: #2f80ff #0d1020;
+  }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
@@ -942,7 +968,7 @@
 </div>
 
 <!-- DASHBOARD -->
-<div id="dashboardPage" style="display:none; position:fixed; inset:0; background:#0a0d14; z-index:500; overflow-y:auto; font-family:'Inter',sans-serif;">
+<div id="dashboardPage" style="display:none; position:fixed; inset:0; background:#0a0d14; z-index:500; overflow:hidden; font-family:'Inter',sans-serif;">
 
   <!-- DASH TOPBAR -->
   <div style="
@@ -967,7 +993,7 @@
   </div>
 
   <!-- DASH BODY: sidebar + content -->
-  <div style="display:flex; height:calc(100vh - 56px); overflow-y:auto;">
+  <div style="display:flex; height:calc(100vh - 56px); overflow:hidden;">
 
     <!-- SIDEBAR -->
     <div style="
@@ -976,8 +1002,10 @@
       border-right:1px solid rgba(255,255,255,0.07);
       padding:20px 12px;
       display:flex; flex-direction:column; gap:4px;
-      position:sticky; top:0; height:calc(100vh - 56px);
+      height:100%;
       overflow-y:auto;
+      scrollbar-width:thin;
+      scrollbar-color:#2f80ff #0a0d14;
     ">
       <button onclick="setTab('board')" id="tab-board" class="dash-tab active-tab" style="justify-content:flex-start;gap:10px;padding:10px 14px;">📋 Board</button>
       <button onclick="setTab('estoque')" id="tab-estoque" class="dash-tab" style="justify-content:flex-start;gap:10px;padding:10px 14px;">📦 Estoque</button>
@@ -995,7 +1023,8 @@
     </div>
 
     <!-- MAIN CONTENT -->
-    <div style="flex:1; min-width:0; padding:28px 32px;">
+    <div style="flex:1; min-width:0; overflow-y:auto; height:100%; scrollbar-width:thin; scrollbar-color:#2f80ff #0a0d14;">
+      <div style="max-width:860px; width:100%; padding:28px 32px; margin:0 auto; box-sizing:border-box;">
 
 
     <!-- BOARD TAB -->
@@ -1574,6 +1603,8 @@
 
     </div>
 
+      </div><!-- end max-width wrapper -->
+    </div><!-- end main content scroll -->
   </div><!-- end sidebar+content flex -->
 </div><!-- end dashboardPage -->
 
